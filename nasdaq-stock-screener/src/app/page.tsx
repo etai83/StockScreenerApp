@@ -87,7 +87,7 @@ export default function HomePage() {
     };
 
     loadData();
-  }, [currentFilterGroup, isSignedIn]); // Re-check alerts if signedIn status changes or new data
+  }, [currentFilterGroup, isSignedIn, userAlerts]); // Re-check alerts if signedIn status changes or new data
 
   const handleApplyFilters = useCallback((newFilterGroup: FilterGroup) => {
     setCurrentFilterGroup(newFilterGroup);

@@ -1,6 +1,6 @@
 "use client"; // This component will fetch data and manage state
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableHeader,
@@ -10,7 +10,7 @@ import {
   TableCell,
   TableCaption,
 } from "@/components/ui/table"; // Assuming shadcn/ui table is available
-import { fetchScreenerData } from '@/lib/mocks/api';
+// import { fetchScreenerData } from '@/lib/mocks/api'; // Not used in this component
 import { TickerMetrics } from '@/lib/types';
 import { Badge } from "@/components/ui/badge"; // For status pills or % changes
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"; // For sorting icons
@@ -51,7 +51,7 @@ const StockTable: React.FC<StockTableProps> = ({ initialData, isLoading, error, 
 
   const sortedData = useMemo(() => {
     // Use initialData directly from props
-    let sortableItems = [...initialData];
+    const sortableItems = [...initialData];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         const valA = a[sortConfig.key];

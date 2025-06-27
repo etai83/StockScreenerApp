@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose, // If you want an explicit close button in footer
+  // DialogClose, // If you want an explicit close button in footer - not used
 } from "@/components/ui/dialog"; // Assuming shadcn/ui dialog is available
 import { TickerMetrics } from '@/lib/types';
 import { Badge } from '@/components/ui/badge'; // Re-using badge for consistency

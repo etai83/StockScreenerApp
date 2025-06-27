@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { FilterRule, FilterableMetric, FilterOperator, filterableMetricsList, filterOperatorList, FilterGroup } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -91,7 +91,7 @@ const FilterBuilder: React.FC<FilterBuilderProps> = ({ onApplyFilters, initialFi
         </div>
       </div>
 
-      {filterGroup.rules.map((rule, index) => (
+      {filterGroup.rules.map((rule) => (
         <div key={rule.id} className="flex items-center space-x-2 p-3 bg-muted/50 rounded-md">
           {/* Metric Select */}
           <Select

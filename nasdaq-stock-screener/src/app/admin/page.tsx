@@ -14,7 +14,7 @@ const AdminPage: React.FC = () => {
     status: "Completed Successfully",
     nextRun: new Date(Date.now() + 3600 * 1000 * 0.9).toLocaleString(), // In ~54 minutes
   });
-  const [apiCredits, setApiCredits] = useState<{ provider: string; used: number; limit: number; resetDate: string }[]>([
+  const [apiCredits] = useState<{ provider: string; used: number; limit: number; resetDate: string }[]>([
     { provider: "Nasdaq Data Link", used: 1500, limit: 50000, resetDate: "2025-07-01" },
     { provider: "Alpha Vantage", used: 25, limit: 500, resetDate: "2025-06-26" },
   ]);
