@@ -1,0 +1,5 @@
+# Python dependencies for the ETL process
+requests
+psycopg2-binary # For PostgreSQL connection
+pandas # For data manipulation, optional but useful for SMA, etc.
+# python-dotenv # For loading .env files (good practice for config)
