@@ -44,11 +44,15 @@ This project was developed based on the [Product Requirements Document (PRD) - N
 *   **Admin Console (F-9) - Mocked**:
     *   Separate `/admin` page.
     *   Displays mock ETL job status, API credit usage.
-    *   Button for (mock) manual ETL re-runs.
+    *   Button for (mock) manual "Full ETL" re-runs.
+    *   **New**: Button for (mock) "Sync S&P 500 Prices".
     *   Access conceptually restricted to (mock) signed-in users.
-*   **ETL Process (F-1, F-2, F-3) - Conceptual Structure**:
+*   **ETL Process (F-1, F-2, F-3) - Conceptual Structure & S&P 500 Sync**:
     *   Python scripts structured for data fetching, calculations, and DB management.
     *   Core calculation logic for SMA150, 52W High, % changes implemented.
+    *   **New**: Capability to dynamically fetch S&P 500 stock symbols from Wikipedia.
+    *   **New**: Capability to fetch latest closing prices for S&P 500 symbols using `yfinance`.
+    *   **New**: Logic to update these prices in the (conceptual) database.
     *   Placeholder for API calls with conceptual retry logic.
     *   Placeholder for PostgreSQL/TimescaleDB interaction.
 
@@ -87,7 +91,7 @@ This project was developed based on the [Product Requirements Document (PRD) - N
 
 The ETL scripts are located in the `nasdaq-stock-screener/etl/` directory.
 *   **Environment**: Python 3.x.
-*   **Dependencies**: Install using `pip install -r requirements.txt` (located in the `etl` directory).
+*   **Dependencies**: Install using `pip install -r requirements.txt` (located in the `etl` directory). This now includes `yfinance`, `beautifulsoup4`, `lxml` in addition to `requests`, `psycopg2-binary`, `pandas`.
 *   **Configuration**: API keys and database credentials should be set as environment variables (see `etl/config.py`).
     *   `NASDAQ_API_KEY`
     *   `ALPHA_VANTAGE_API_KEY` (for backup data provider)
@@ -96,9 +100,11 @@ The ETL scripts are located in the `nasdaq-stock-screener/etl/` directory.
     ```bash
     cd nasdaq-stock-screener/etl
     # Set environment variables first
-    python main.py
+    python main.py --sync-sp500  # To run the S&P 500 price sync
+    # python main.py --full-etl    # Conceptual full ETL run
+    # python main.py --init-db     # To initialize the database
     ```
-    *(Currently, `main.py` is a basic placeholder and does not orchestrate a full ETL flow with live data).*
+    *(Currently, these scripts perform mock operations or are placeholders for full functionality).*
 
 ## 7. API Documentation (Conceptual)
 
@@ -124,6 +130,16 @@ Since the backend API was not implemented, this section outlines the planned API
     *   **Response**:
         *   `200 OK`: `{ data: ExtendedTickerDetails }` (format TBD, would include historical data points).
         *   `404 Not Found`.
+
+*   **POST `/api/etl/sync-sp500` (Conceptual)**
+    *   **Description**: Initiates a backend process to fetch the latest closing prices for all S&P 500 stocks and update them in the database. This is intended to be triggered manually by an admin.
+    *   **Authentication**: Requires admin privileges (conceptual).
+    *   **Request Body**: None.
+    *   **Response**:
+        *   `202 Accepted`: `{"message": "S&P 500 price sync process initiated."}`
+        *   `401 Unauthorized` / `403 Forbidden`: If not authorized.
+        *   `500 Internal Server Error`: If the backend fails to start the process.
+    *   **Note**: In the current mocked implementation, a frontend button simulates this, updating local mock data instead of calling a real API.
 
 *(Other endpoints for saving user preferences, filters, and alerts would be needed for authenticated users.)*
 

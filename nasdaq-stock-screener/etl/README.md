@@ -22,6 +22,7 @@ This directory contains the Python scripts responsible for the Extract, Transfor
     *   Backup provider: Alpha Vantage or Finnhub (conceptual).
     *   Includes conceptual logic for retries with exponential backoff for API requests.
     *   Currently returns placeholder/mock data.
+    *   **New**: Includes `fetch_latest_closing_prices_for_symbols` using `yfinance` to get recent prices for a list of symbols.
 *   **`calculations.py`**:
     *   Contains functions to calculate financial metrics based on raw data:
         *   150-day Simple Moving Average (SMA150).
@@ -35,12 +36,16 @@ This directory contains the Python scripts responsible for the Extract, Transfor
         *   Establishing a database connection.
         *   Creating the `ticker_metrics` table (idempotent, conceptual TimescaleDB hypertable conversion).
         *   Storing (upserting) `TickerMetrics` data.
+        *   **New**: `update_stock_prices` function to specifically update latest prices for symbols by creating new timestamped records.
     *   Currently, database operations are placeholders and do not execute against a live database.
+*   **`symbol_utils.py` (New)**:
+    *   Utilities for fetching lists of stock symbols.
+    *   Includes `get_sp500_stocks_tickers_from_wiki` to scrape S&P 500 tickers from Wikipedia.
 *   **`config.py`**:
     *   Defines configuration settings, such as API keys, database connection parameters, and sample stock symbols.
     *   Emphasizes loading sensitive information from environment variables.
 *   **`requirements.txt`**:
-    *   Lists Python dependencies for the ETL process (e.g., `requests`, `psycopg2-binary`, `pandas`).
+    *   Lists Python dependencies. **Updated** to include `yfinance`, `beautifulsoup4`, `lxml`.
 
 ## Setup and Running (Conceptual)
 
@@ -73,11 +78,18 @@ This directory contains the Python scripts responsible for the Extract, Transfor
     *   `DB_PORT="your_db_port"`
 
 ### 3. Running the ETL Process (Conceptual)
-Once the environment is set up and configured, the main ETL script would be run:
+Once the environment is set up and configured, the main ETL script can be run with different arguments:
 ```bash
-python main.py
+# To run the S&P 500 latest price sync:
+python main.py --sync-sp500
+
+# To run the (conceptual) full ETL for NASDAQ_SYMBOLS_SAMPLE:
+# python main.py --full-etl
+
+# To initialize the database (create tables if they don't exist):
+# python main.py --init-db
 ```
-**Note:** In its current state, running `main.py` will execute placeholder logic and print messages to the console. It will not perform live data fetching or database operations.
+**Note:** In its current state, these commands will execute the implemented logic (e.g., S&P 500 sync will attempt to fetch from Wikipedia and yfinance) but database operations are against a mock/non-existent DB. The full ETL is a placeholder.
 
 ### 4. Running Docstring Tests for Calculations
 To verify the calculation logic:

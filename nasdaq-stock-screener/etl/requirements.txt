@@ -3,3 +3,8 @@ requests
 psycopg2-binary # For PostgreSQL connection
 pandas # For data manipulation, optional but useful for SMA, etc.
 # python-dotenv # For loading .env files (good practice for config)
+
+# Added for S&P 500 ticker scraping and yfinance data
+beautifulsoup4
+yfinance
+lxml # Often used as a parser with BeautifulSoup, good to have.

@@ -210,3 +210,88 @@ if __name__ == '__main__':
         print("Could not connect to PostgreSQL. Please ensure it's running and accessible.")
     except Exception as e:
         print(f"An error occurred during db_manager example: {e}")
+
+
+def update_stock_prices(conn, price_updates: list[dict]):
+    """
+    Updates stock prices in the database.
+    For each symbol in price_updates, it fetches the most recent existing record,
+    updates its lastPrice with the new price, sets updatedAt to now,
+    and then re-inserts/upserts this complete record using store_ticker_metrics.
+
+    `price_updates` is a list of dicts: [{'symbol': str, 'lastPrice': float, 'priceDate': str_iso_date}, ...]
+    Note: 'priceDate' from the input is logged but not directly used as 'updatedAt' for the new record.
+          'updatedAt' for the new record will be the current timestamp.
+    """
+    if not price_updates:
+        print("No price updates to process.")
+        return
+
+    print(f"Processing {len(price_updates)} price updates...")
+    records_to_store = []
+    now_timestamp = datetime.now()
+
+    for update in price_updates:
+        symbol = update.get('symbol')
+        new_price = update.get('lastPrice')
+        price_date_str = update.get('priceDate') # Date of the price from source
+
+        if not symbol or new_price is None:
+            print(f"Skipping invalid price update entry: {update}")
+            continue
+
+        # 1. Fetch the most recent complete record for this symbol
+        latest_record_for_symbol = get_latest_metrics_for_symbol(conn, symbol)
+
+        if latest_record_for_symbol:
+            # Create a new record based on the old one, updating price and timestamp
+            updated_record = {
+                "symbol": symbol,
+                "lastPrice": new_price,
+                "sma150": latest_record_for_symbol.get('sma150'),
+                "hi52w": latest_record_for_symbol.get('hi52w'),
+                "pctVsSma150": None, # Will need recalculation
+                "pctVs52w": None,    # Will need recalculation
+                "updatedAt": now_timestamp
+            }
+            # Recalculate percentages if possible (or mark for later recalculation)
+            if updated_record["sma150"] is not None:
+                updated_record["pctVsSma150"] = ((new_price - updated_record["sma150"]) / updated_record["sma150"]) * 100 if updated_record["sma150"] != 0 else None
+            if updated_record["hi52w"] is not None:
+                 # 52-week high might also need update if new_price is higher, but that requires historical data.
+                 # For this simple update, we assume hi52w from previous record is still relevant or updated by full ETL.
+                 # If new_price > hi52w, then hi52w should become new_price.
+                if new_price > updated_record["hi52w"]:
+                    updated_record["hi52w"] = new_price # Update 52w high if current price beats it
+                updated_record["pctVs52w"] = ((new_price - updated_record["hi52w"]) / updated_record["hi52w"]) * 100 if updated_record["hi52w"] != 0 else None
+
+            records_to_store.append(updated_record)
+            print(f"Prepared update for {symbol}: New Price ${new_price} (Price Date: {price_date_str}, UpdatedAt: {now_timestamp.isoformat()})")
+        else:
+            # If no existing record, we can't just update price.
+            # We'd need a full data fetch for this new symbol or insert with many nulls.
+            # For a "price update" feature, we typically assume the symbol exists.
+            # Alternatively, insert a partial record if schema allows (it doesn't for NOT NULL if any).
+            # For now, we'll create a new record with available data, others null.
+            # This also requires recalculation of percentages if we want them.
+            new_partial_record = {
+                "symbol": symbol,
+                "lastPrice": new_price,
+                "sma150": None,
+                "hi52w": new_price, # If it's a new stock, its own price is its 52w high/low initially
+                "pctVsSma150": None,
+                "pctVs52w": 0.0, # Price is at its own 52w high
+                "updatedAt": now_timestamp
+            }
+            records_to_store.append(new_partial_record)
+            print(f"Prepared new partial record for {symbol} (not previously tracked): Price ${new_price} (Price Date: {price_date_str}, UpdatedAt: {now_timestamp.isoformat()})")
+
+    if records_to_store:
+        try:
+            store_ticker_metrics(conn, records_to_store) # Use existing function to upsert
+            print(f"Successfully processed and stored/updated {len(records_to_store)} price updates.")
+        except Exception as e:
+            print(f"Error during storing price updates: {e}")
+            # Handle or re-raise
+    else:
+        print("No valid records were prepared for price update storage.")

@@ -14,11 +14,12 @@ const AdminPage: React.FC = () => {
     status: "Completed Successfully",
     nextRun: new Date(Date.now() + 3600 * 1000 * 0.9).toLocaleString(), // In ~54 minutes
   });
-  const [apiCredits] = useState<{ provider: string; used: number; limit: number; resetDate: string }[]>([
+  const [apiCredits, setApiCredits] = useState<{ provider: string; used: number; limit: number; resetDate: string }[]>([
     { provider: "Nasdaq Data Link", used: 1500, limit: 50000, resetDate: "2025-07-01" },
     { provider: "Alpha Vantage", used: 25, limit: 500, resetDate: "2025-06-26" },
   ]);
   const [isEtlRunning, setIsEtlRunning] = useState<boolean>(false);
+  const [isSp500Syncing, setIsSp500Syncing] = useState<boolean>(false); // New state for S&P500 sync
 
   const handleManualEtlRun = () => {
     if (!isSignedIn) {
@@ -39,6 +40,49 @@ const AdminPage: React.FC = () => {
       console.log("AdminPage: Mock manual ETL run finished.");
       alert("Mock: Manual ETL process finished.");
     }, 5000); // Simulate 5 seconds run
+  };
+
+  const handleSp500DataSync = () => {
+    if (!isSignedIn) {
+      alert("Mock: You need to be signed in as an admin to sync S&P 500 prices.");
+      return;
+    }
+
+    console.log("AdminPage: Mock S&P 500 Price Sync triggered.");
+    setIsSp500Syncing(true);
+    alert("Mock Sync: Starting S&P 500 latest price sync simulation..."); // User notification
+
+    // Simulate API call and data processing delay
+    setTimeout(() => {
+      // 1. Get a mock list of S&P 500 symbols (subset for demo)
+      const mockSp500Symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "JPM", "JNJ", "V", "PG"];
+      console.log(`Mock Sync: Using ${mockSp500Symbols.length} mock S&P 500 symbols.`);
+
+      // 2. Generate new random "latest closing prices" for these symbols
+      const priceUpdates = mockSp500Symbols.map(symbol => {
+        const lastPrice = parseFloat((Math.random() * (500 - 50) + 50).toFixed(2)); // Random price between 50-500
+        return {
+          symbol: symbol,
+          lastPrice: lastPrice,
+          priceDate: new Date().toISOString().split('T')[0] // Today's date
+        };
+      });
+      console.log("Mock Sync: Generated price updates:", priceUpdates.slice(0,3)); // Log first few
+
+      // 3. Simulate Updating Global State / Informing User
+      //    In a real app, this would trigger an API call which updates the DB.
+      //    Then, the main dashboard data would re-fetch or update via websockets/polling.
+      //    Here, we just log and alert, as AdminPage cannot directly update HomePage's state easily.
+      //    A shared state (Context/Zustand/Redux) would be needed for cross-component state updates.
+
+      // This alert simulates the outcome. The data in StockTable on HomePage will NOT change.
+      alert(`Mock Sync: S&P 500 price sync simulation complete for ${priceUpdates.length} symbols.
+Data in the main dashboard table is NOT updated by this mock admin action.
+This action simulates the backend ETL update only.`);
+
+      setIsSp500Syncing(false);
+      console.log("AdminPage: Mock S&P 500 Price Sync finished.");
+    }, 3000); // Simulate 3 seconds for the sync process
   };
 
   // This is a client component, so Clerk's <SignedIn> <SignedOut> or useAuth() can be used.
@@ -106,11 +150,23 @@ const AdminPage: React.FC = () => {
               <Button
                 onClick={handleManualEtlRun}
                 disabled={isEtlRunning}
-                className="w-full"
+                className="w-full mb-4" // Added margin bottom
               >
-                {isEtlRunning ? "ETL Running..." : "Run ETL Manually"}
+                {isEtlRunning ? "ETL Running..." : "Run Full ETL Manually (Mock)"}
               </Button>
-              {isEtlRunning && <p className="text-xs text-muted-foreground mt-2 text-center animate-pulse">Simulation in progress...</p>}
+              {isEtlRunning && <p className="text-xs text-muted-foreground mt-2 mb-4 text-center animate-pulse">Full ETL simulation in progress...</p>}
+
+              {/* New Data Sync Button */}
+              <Button
+                onClick={() => handleSp500DataSync()} // Placeholder, will be implemented next
+                disabled={isSp500Syncing} // New state variable needed: isSp500Syncing
+                className="w-full"
+                variant="outline" // Different style for distinction
+              >
+                {isSp500Syncing ? "S&P 500 Syncing..." : "Sync S&P 500 Prices (Mock)"}
+              </Button>
+              {isSp500Syncing && <p className="text-xs text-muted-foreground mt-2 text-center animate-pulse">S&P 500 price sync simulation in progress...</p>}
+
             </CardContent>
           </Card>
         </div>

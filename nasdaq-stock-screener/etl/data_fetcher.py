@@ -5,6 +5,8 @@ import requests
 # from .config import NASDAQ_API_KEY, ALPHA_VANTAGE_API_KEY # Example
 
 import time
+import yfinance as yf # Added yfinance
+from datetime import datetime
 
 # Placeholder for actual API URLs
 NASDAQ_API_URL = "https://data.nasdaq.com/api/v3/datatables/SHARADAR/SEP" # Example: Sharadar Equity Prices
@@ -103,6 +105,43 @@ def fetch_nasdaq_data(symbols: list[str]):
     # where each contains enough info for calculations.py (e.g., historical prices).
     # The current return is still too simplistic for real calculations.
     return all_ticker_data if all_ticker_data else [{"symbol": s, "error": "NoData", "api_source": "Nasdaq"} for s in symbols]
+
+
+def fetch_latest_closing_prices_for_symbols(symbols: list[str]) -> list[dict]:
+    """
+    Fetches the latest available closing price for a list of symbols using yfinance.
+    Returns a list of dictionaries: {'symbol': str, 'lastPrice': float, 'priceDate': str_iso_date}
+    or {'symbol': str, 'error': str} if fetching fails for a symbol.
+    """
+    print(f"Fetching latest closing prices for {len(symbols)} symbols using yfinance...")
+    results = []
+    for symbol in symbols:
+        try:
+            ticker = yf.Ticker(symbol)
+            # Fetch history for the last 2 trading days to reliably get the most recent close
+            # yfinance returns data with Date as index (timezone-aware)
+            hist = ticker.history(period="2d", auto_adjust=True, prepost=False)
+
+            if not hist.empty:
+                latest_data = hist.iloc[-1] # Get the last row
+                close_price = latest_data['Close']
+                price_date = latest_data.name.strftime('%Y-%m-%d') # .name is the DatetimeIndex value
+
+                results.append({
+                    "symbol": symbol,
+                    "lastPrice": round(float(close_price), 4), # Ensure float and round
+                    "priceDate": price_date
+                })
+                # print(f"Successfully fetched closing price for {symbol}: {close_price} on {price_date}")
+            else:
+                print(f"No historical data found for {symbol} with yfinance.")
+                results.append({"symbol": symbol, "error": "NoDataFound"})
+        except Exception as e:
+            print(f"Error fetching data for {symbol} with yfinance: {e}")
+            results.append({"symbol": symbol, "error": str(e)})
+        time.sleep(0.1) # Small delay to be polite to the API, yfinance might handle rate limits too
+
+    return results
 
 
 def fetch_alpha_vantage_data(symbols: list[str]):
