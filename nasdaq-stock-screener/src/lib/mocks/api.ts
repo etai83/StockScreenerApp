@@ -1,6 +1,6 @@
 // src/lib/mocks/api.ts
 
-import { TickerMetrics, FilterGroup, FilterRule } from '@/lib/types';
+import { TickerMetrics } from '@/lib/types'; // Assuming types will be defined here
 
 // Helper function to generate a random float within a range
 const getRandomFloat = (min: number, max: number, decimals: number): number => {
@@ -47,6 +47,8 @@ const sampleSymbols: string[] = [
 
 // Generate a list of mock TickerMetrics
 const mockTickerMetricsData: TickerMetrics[] = sampleSymbols.map(generateMockTickerMetric);
+
+import { TickerMetrics, FilterGroup, FilterRule, FilterOperator } from '@/lib/types'; // Ensure Filter types are imported
 
 // ... (keep existing helper functions: getRandomFloat, getRandomInt, generateMockTickerMetric, sampleSymbols, mockTickerMetricsData)
 
